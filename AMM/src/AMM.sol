@@ -57,21 +57,25 @@ contract AMM is AccessControl{
 		uint256 swapAmt;
 		
 		//YOUR CODE HERE 
+
 		uint256 buyAmount;
 		uint256 fee = sellAmount * feebps / 10000;
-    	uint256 adjustedSellAmount = sellAmount - fee;
-
+		uint256 adjustedSellAmount = sellAmount - fee;
+		uint256 effectiveSellAmount = (10000 - feebps) * adjustedSellAmount / 10000;
 
 		if (sellToken == tokenA) {
 			require(ERC20(tokenA).transferFrom(msg.sender, address(this), sellAmount));
-			buyAmount = ERC20(tokenB).balanceOf(address(this)) - (invariant / (ERC20(tokenA).balanceOf(address(this)) - adjustedSellAmount));
-        	require(ERC20(tokenB).transfer(msg.sender, buyAmount));
-    	} else {
+			buyAmount = ERC20(tokenB).balanceOf(address(this)) - (invariant / (ERC20(tokenA).balanceOf(address(this)) + effectiveSellAmount));
+			require(ERC20(tokenB).transfer(msg.sender, buyAmount));
+		} else {
 			require(ERC20(tokenB).transferFrom(msg.sender, address(this), sellAmount));
-			buyAmount = ERC20(tokenA).balanceOf(address(this)) - (invariant / (ERC20(tokenB).balanceOf(address(this)) - adjustedSellAmount));
+			buyAmount = ERC20(tokenA).balanceOf(address(this)) - (invariant / (ERC20(tokenB).balanceOf(address(this)) + effectiveSellAmount));
 			require(ERC20(tokenA).transfer(msg.sender, buyAmount));
-    	}
+		}
+
+
 		//end my code
+
 
 		uint256 new_invariant = ERC20(tokenA).balanceOf(address(this))*ERC20(tokenB).balanceOf(address(this));
 		require( new_invariant >= invariant, 'Bad trade' );
@@ -112,6 +116,9 @@ contract AMM is AccessControl{
 		invariant = ERC20(tokenA).balanceOf(address(this))*ERC20(tokenB).balanceOf(address(this));
 		emit Withdrawal( msg.sender, recipient, amtA, amtB );
 	}
+
+
+	
 
 
 }
