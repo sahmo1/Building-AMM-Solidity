@@ -56,6 +56,8 @@ contract AMM is AccessControl{
 		uint256 qtyB;
 		uint256 swapAmt;
 
+		uint256 buyAmount;
+
 		//YOUR CODE HERE 
 
 		qtyA = ERC20(tokenA).balanceOf(address(this));
@@ -98,10 +100,14 @@ contract AMM is AccessControl{
 		//YOUR CODE HERE
 		
 		//i added below
-		require(ERC20(_tokenA).transferFrom(msg.sender, address(this), _amtA), 'TokenA transfer failed');
-        require(ERC20(_tokenB).transferFrom(msg.sender, address(this), _amtB), 'TokenB transfer failed');
+		require(ERC20(tokenA).transferFrom(msg.sender, address(this), amtA), 'TokenA transfer failed');
+        require(ERC20(tokenB).transferFrom(msg.sender, address(this), amtB), 'TokenB transfer failed');
 
         invariant = ERC20(tokenA).balanceOf(address(this)) * ERC20(tokenB).balanceOf(address(this));
+
+		uint256 new_invariant = ERC20(tokenA).balanceOf(address(this)) * ERC20(tokenB).balanceOf(address(this));
+		require(new_invariant > invariant, 'Invariant did not increase');
+		invariant = new_invariant;
         
 
 		emit LiquidityProvision( msg.sender, amtA, amtB );
