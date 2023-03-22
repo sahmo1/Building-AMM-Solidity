@@ -84,11 +84,11 @@ contract AMM is AccessControl{
 			ERC20(tokenA).transfer(msg.sender, buyAmount);
 		}
 
+		//end my code
+
 		uint256 new_invariant = ERC20(tokenA).balanceOf(address(this))*ERC20(tokenB).balanceOf(address(this));
 		require( new_invariant >= invariant, 'Bad trade' );
 		invariant = new_invariant;
-
-		emit Swap(sellToken, sellToken == tokenA ? tokenB : tokenA, sellAmount, buyAmount);
 
 	}
 
@@ -99,16 +99,12 @@ contract AMM is AccessControl{
 		require( amtA > 0 || amtB > 0, 'Cannot provide 0 liquidity' );
 		//YOUR CODE HERE
 		
-		//i added below
-		require(ERC20(tokenA).transferFrom(msg.sender, address(this), amtA), 'TokenA transfer failed');
-        require(ERC20(tokenB).transferFrom(msg.sender, address(this), amtB), 'TokenB transfer failed');
+		require(ERC20(tokenA).transferFrom(msg.sender, address(this), amtA));
+        require(ERC20(tokenB).transferFrom(msg.sender, address(this), amtB));
 
         invariant = ERC20(tokenA).balanceOf(address(this)) * ERC20(tokenB).balanceOf(address(this));
-
-		uint256 new_invariant = ERC20(tokenA).balanceOf(address(this)) * ERC20(tokenB).balanceOf(address(this));
-		require(new_invariant > invariant, 'Invariant did not increase');
-		invariant = new_invariant;
         
+		//end my code
 
 		emit LiquidityProvision( msg.sender, amtA, amtB );
 	}
