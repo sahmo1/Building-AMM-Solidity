@@ -55,35 +55,22 @@ contract AMM is AccessControl{
 		uint256 qtyA;
 		uint256 qtyB;
 		uint256 swapAmt;
-
-		uint256 buyAmount;
-
+		
 		//YOUR CODE HERE 
-
-		qtyA = ERC20(tokenA).balanceOf(address(this));
-		qtyB = ERC20(tokenB).balanceOf(address(this));
+		uint256 buyAmount;
+		uint256 fee = sellAmount * feebps / 10000;
+    	uint256 adjustedSellAmount = sellAmount - fee;
 
 
 		if (sellToken == tokenA) {
-			uint256 fee = (sellAmount * feebps) / 10000;
-			uint256 adjustedSellAmount = sellAmount - fee;
-			require(adjustedSellAmount > 0, 'NOT VALID SELL AMOUNT');
-			buyAmount = (invariant * adjustedSellAmount) / qtyA;
-			require(buyAmount > 0 && buyAmount <= qtyB, 'NOT VALID BUY AMOUNT');
-			ERC20(tokenA).transferFrom(msg.sender, address(this), sellAmount);
-			ERC20(tokenB).transfer(msg.sender, buyAmount);
-		} 
-		
-		else if (sellToken == tokenB) {
-			uint256 fee = (sellAmount * feebps) / 10000;
-			uint256 adjustedSellAmount = sellAmount - fee;
-			require(adjustedSellAmount > 0, 'Invalid sell amount');
-			buyAmount = (invariant * adjustedSellAmount) / qtyB;
-			require(buyAmount > 0 && buyAmount <= qtyA, 'Invalid buy amount');
-			ERC20(tokenB).transferFrom(msg.sender, address(this), sellAmount);
-			ERC20(tokenA).transfer(msg.sender, buyAmount);
-		}
-
+			require(ERC20(tokenA).transferFrom(msg.sender, address(this), sellAmount));
+			buyAmount = ERC20(tokenB).balanceOf(address(this)) - (invariant / (ERC20(tokenA).balanceOf(address(this)) - adjustedSellAmount));
+        	require(ERC20(tokenB).transfer(msg.sender, buyAmount));
+    	} else {
+			require(ERC20(tokenB).transferFrom(msg.sender, address(this), sellAmount));
+			buyAmount = ERC20(tokenA).balanceOf(address(this)) - (invariant / (ERC20(tokenB).balanceOf(address(this)) - adjustedSellAmount));
+			require(ERC20(tokenA).transfer(msg.sender, buyAmount));
+    	}
 		//end my code
 
 		uint256 new_invariant = ERC20(tokenA).balanceOf(address(this))*ERC20(tokenB).balanceOf(address(this));
