@@ -58,38 +58,28 @@ contract AMM is AccessControl{
 		
 		//YOUR CODE HERE 
 
-			// Calculate quantities of tokenA and tokenB in the pool
+			// Calculate quantities of tokenA and tokenB
 		uint256 reserveA = ERC20(tokenA).balanceOf(address(this));
 		uint256 reserveB = ERC20(tokenB).balanceOf(address(this));
+
+		uint256 buyAmount;
+    	uint256 delta;
 		
 		if (sellToken == tokenA) {
-			// Calculate amount of tokenB to receive for sellAmount of tokenA
-			uint256 temp = (reserveA * reserveB) / invariant;
-			uint256 buyAmount = temp - (temp * feebps / 10000);
-			uint256 adjustedSellAmount = sellAmount * (10000 - feebps) / 10000;
-			uint256 deltaB = (reserveB * adjustedSellAmount) / (reserveA + adjustedSellAmount);
-			qtyB = deltaB;
-			qtyA = sellAmount;
-			swapAmt = buyAmount;
+
+			delta = sellAmount * (10000 - feebps) / 10000;
+			buyAmount = (reserveB * delta) / (reserveA + delta);
 			
-			// Transfer tokens
-			require( ERC20(tokenA).transferFrom(msg.sender, address(this), sellAmount), 'FAILED TO TRANSFER TOKEN A' );
-			require( ERC20(tokenB).transfer(msg.sender, buyAmount), 'FAILED TO TRANSFER TOKEN B' );
+			require(ERC20(tokenA).transferFrom(msg.sender, address(this), sellAmount), 'FAILED TO TRANSFER TOKEN A');
+			require(ERC20(tokenB).transfer(msg.sender, buyAmount), 'FAILED TO TRANSFER TOKEN B');
 		} else {
-			// Calculate amount of tokenA to receive for sellAmount of tokenB
-			uint256 temp = (reserveA * reserveB) / invariant;
-			uint256 buyAmount = temp - (temp * feebps / 10000);
-			uint256 adjustedSellAmount = sellAmount * (10000 - feebps) / 10000;
-			uint256 deltaA = (reserveA * adjustedSellAmount) / (reserveB + adjustedSellAmount);
-			qtyB = sellAmount;
-			qtyA = deltaA;
-			swapAmt = buyAmount;
+			delta = sellAmount * (10000 - feebps) / 10000;
+			buyAmount = (reserveA * delta) / (reserveB + delta);
 			
-			require( ERC20(tokenB).transferFrom(msg.sender, address(this), sellAmount), 'FAILED TO TRANSFER TOKEN B' );
-			require( ERC20(tokenA).transfer(msg.sender, buyAmount), 'FAILED TO TRANSFER TOKEN A' );
+			require(ERC20(tokenB).transferFrom(msg.sender, address(this), sellAmount), 'FAILED TO TRANSFER TOKEN B');
+			require(ERC20(tokenA).transfer(msg.sender, buyAmount), 'FAILED TO TRANSFER TOKEN A');
 		}
 
-		
 		//end my code
 		
 		uint256 new_invariant = ERC20(tokenA).balanceOf(address(this))*ERC20(tokenB).balanceOf(address(this));
